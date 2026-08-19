@@ -6,6 +6,7 @@ import { io } from 'socket.io-client';
 function App() {
 
   const [inputValue, setInputValue] = useState("");
+  const [allTodo, setAllTodo] = useState([]);
 
   const handleSubmit = () => {
    socket.emit("task", inputValue)
@@ -14,7 +15,8 @@ function App() {
 
   useEffect(() => {
   socket.on("taskClient", (value) => {
-  console.log(value)
+    console.log(value)
+  setAllTodo(value);
   })
 
   }, []);
@@ -26,9 +28,10 @@ function App() {
       <button onClick={handleSubmit}>submit</button>
       <div>
         <ul>
-          <li>
-
-          </li>
+          {allTodo.map((item, index) =>(
+            <li key={index}>{item}</li>
+          ))
+          }
         </ul>
       </div>
     </div>
