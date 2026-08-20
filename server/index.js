@@ -5,6 +5,8 @@ const dbConfig = require("./config/dbConfig");
 const { createServer } = require('node:http');
 const { Server } = require('socket.io');
 const cors = require("cors");
+const { getTask, createTask, updateTask, deleteTask } = require("./controller/taskController");
+
 const PORT = process.env.PORT || 8000;
 dns.setServers(["8.8.8.8", "1.1.1.1"])
 
@@ -20,15 +22,31 @@ const io = new Server(server, {
   }
 });
 
-let allTask = [];
 
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   console.log('a user connected' + socket.id);
-  socket.on("task", (value) => {
-    allTask.push(value)
-  io.emit("taskClient", allTask)
-  })
-  io.emit("taskClient", allTask)
+  
+  const task = await getTask();
+  socket.emit("taskClient", task);
+
+  socket.on("task", async (title) => {
+    await createTask(title);
+    const validTask = await getTask();
+    io.emit("taskClient", validTask)
+  }); 
+
+  socket.on("updateTask", async ({ id, isCompleted }) => {
+    await updateTask(id, {isCompleted });
+    const validTask = await getTask();
+    io.emit("taskClient", validTask)
+  });
+
+  socket.on("deleteTask", async (id) => {
+     await deleteTask(id);
+     const validTask = await getTask();
+     io.emit("taskClient", validTask)
+  });
+
   socket.on('disconnect', () => {
     console.log('user disconnected:' + socket.id);
   });
